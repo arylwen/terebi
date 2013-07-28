@@ -38,5 +38,7 @@ public @interface LpcParameter
     String name() ;
     String className() default "";
     ArgumentSemantics semantics();
-    boolean varargs() default false;
+    //boolean varargs() default false;
+    //the default creates two
+    boolean varargs();
 }

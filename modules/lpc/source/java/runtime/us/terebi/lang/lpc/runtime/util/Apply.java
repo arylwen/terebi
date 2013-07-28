@@ -65,10 +65,8 @@ public class Apply
             public LpcValue execute()
             {
                 LpcValue value = method.execute(instance, arguments);
-                if (LOG.isDebugEnabled())
-                {
-                    LOG.debug("Method " + method + " in " + instance + " ->" + value);
-                }
+                LOG.debug("Method " + method + " in " + instance + " ->" + value);
+                
                 return value;
             }
         });

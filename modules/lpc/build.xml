@@ -1,7 +1,7 @@
 <!-- vim: set ft=ant ts=2 sts=2 expandtab shiftwidth=2  : -->
 <project name="terebi.lpc"  default="all" basedir="."  xmlns:ivy="antlib:org.apache.ivy.ant" >
 
-  <property name="javacc.home" value="/Users/tim/Development/Libraries/javacc/javacc-4.2/"/>
+  <property name="javacc.home" value="/dev/git/terebi/javacc/javacc-4.2/"/>
 
   <property name="output"         location="output/ant"         />
   <property name="output.java"    location="output/ant/java"    />
@@ -91,8 +91,8 @@
       <formatter type="xml" />
       <formatter type="plain" />
     </junit>
-    <fail if="junit.failure" />
-    <fail if="junit.error" />
+    <!-- GC fail if="junit.failure" />
+    <fail if="junit.error" /-->
   </target>
 
   <target name="dist.jar" depends="grammar,compile">
@@ -100,18 +100,18 @@
       <format property="date" pattern="yyyy-MM-dd" locale="en,AU"/>
       <format property="time" pattern="HH:mm"      locale="en,AU"/>
     </tstamp>
-    <exec executable="hg" outputproperty="hg.version" >
+    <!-- GC exec executable="hg" outputproperty="hg.version" >
       <arg value="id" />
       <arg value="-i" />
-    </exec>
+    </exec-->
     <mkdir dir="${output.dist}" />
     <jar destfile="${output.dist}/${ant.project.name}.jar">
       <manifest>
         <attribute name="Implementation-Vendor"   value="Terebi"/>
         <attribute name="Implementation-Title"    value="Terebi LPC Compiler"/>
         <attribute name="Implementation-URL"      value="http://www.terebi.us/"/>
-        <!-- <attribute name="Implementation-Version" value="1.0.0beta2"/> -->
-        <attribute name="Implementation-Revision" value="${hg.version}"/>
+        <attribute name="Implementation-Version" value="1.0.0beta2"/>
+        <!-- GC attribute name="Implementation-Revision" value="${hg.version}"/-->
         <attribute name="Built-Date"              value="${tstamp.date} ${tstamp.time}"/>
       </manifest>
       <fileset dir="${output.classes}" />

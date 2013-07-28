@@ -21,6 +21,9 @@ package us.terebi.lang.lpc.runtime.jvm.efun.callout;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
+import us.terebi.lang.lpc.compiler.FileStore;
 import us.terebi.lang.lpc.runtime.ArgumentDefinition;
 import us.terebi.lang.lpc.runtime.ArgumentSemantics;
 import us.terebi.lang.lpc.runtime.Callable;
@@ -41,6 +44,8 @@ import us.terebi.lang.lpc.runtime.util.ArgumentSpec;
  */
 public class CallOutEfun extends AbstractEfun implements FunctionSignature, Callable
 {
+	private final Logger LOG = Logger.getLogger(CallOutEfun.class);
+	
     protected List< ? extends ArgumentDefinition> defineArguments()
     {
         ArrayList<ArgumentDefinition> list = new ArrayList<ArgumentDefinition>();
@@ -72,6 +77,7 @@ public class CallOutEfun extends AbstractEfun implements FunctionSignature, Call
 
         CallOutManager callOutManager = RuntimeContext.obtain().system().callout();
         int handle = callOutManager.add(time, callable, ThisObjectEfun.this_object());
+        LOG.info("Registered " + callable + " args "+args+" for " + time);
         return new IntValue(handle);
     }
 }

@@ -62,7 +62,8 @@ public class TerminalColourEfun extends AbstractEfun implements FunctionSignatur
         /* @TODO : Implement this properly... */
         checkArguments(arguments);
         String str = getArgument(arguments, 0).asString();
-        str = str.replaceAll("%\\^\\S+%\\^", "");
+        //str = str.replaceAll("%\\^\\S+%\\^", "");
+        str = str.replaceAll("[%\\^]*[A-Z]+%\\^", "");
         return ValueSupport.stringValue(str);
     }
 

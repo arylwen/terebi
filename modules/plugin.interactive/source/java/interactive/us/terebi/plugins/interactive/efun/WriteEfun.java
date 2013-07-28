@@ -20,8 +20,11 @@ package us.terebi.plugins.interactive.efun;
 
 import java.io.PrintWriter;
 
+import org.apache.log4j.Logger;
+
 import us.terebi.engine.server.ObjectShell;
 import us.terebi.lang.lpc.runtime.ObjectInstance;
+import us.terebi.lang.lpc.runtime.util.Apply;
 import us.terebi.net.core.Connection;
 
 /**
@@ -29,6 +32,8 @@ import us.terebi.net.core.Connection;
  */
 public class WriteEfun extends us.terebi.lang.lpc.runtime.jvm.efun.WriteEfun
 {
+	private final static Logger LOG = Logger.getLogger(WriteEfun.class);
+	 
     protected void write(String message)
     {
         ObjectInstance player = ThisPlayerEfun.this_player();
@@ -46,6 +51,7 @@ public class WriteEfun extends us.terebi.lang.lpc.runtime.jvm.efun.WriteEfun
         {
             return false;
         }
+        LOG.debug(player + " receives: "+message);
         PrintWriter writer = connection.getWriter();
         writer.write(message);
         writer.flush();

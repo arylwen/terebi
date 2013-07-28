@@ -20,6 +20,8 @@ package us.terebi.plugins.interactive.efun;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import us.terebi.lang.lpc.runtime.ArgumentDefinition;
 import us.terebi.lang.lpc.runtime.LpcType;
 import us.terebi.lang.lpc.runtime.LpcValue;
@@ -35,6 +37,8 @@ import us.terebi.lang.lpc.runtime.util.ArgumentSpec;
  */
 public class ReceiveEfun extends AbstractEfun
 {
+	private final Logger LOG = Logger.getLogger(ReceiveEfun.class);
+	
     protected List< ? extends ArgumentDefinition> defineArguments()
     {
         return Collections.singletonList(new ArgumentSpec("message", Types.STRING));
@@ -48,8 +52,11 @@ public class ReceiveEfun extends AbstractEfun
     public LpcValue execute(List< ? extends LpcValue> arguments)
     {
         checkArguments(arguments);
+        LOG.debug("receiving arguments: "+ arguments.get(0));
+        
         String message = arguments.get(0).asString();
 
+        LOG.debug("receiving: "+message);
         ThreadContext context = RuntimeContext.obtain();
         boolean result = WriteEfun.write(ThisObjectEfun.this_object(context), message);
         return getValue(result);

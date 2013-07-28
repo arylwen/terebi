@@ -1,0 +1,1171 @@
+/*    /secure/obj/sefun.c
+ *    from Dead Souls
+ *    the mud sefun object
+ *    created by Descartes of Borg 940213
+ */
+
+#ifndef DESTRUCT_LOGGING
+#define DESTRUCT_LOGGING 0
+#endif
+
+#include <lib.h>
+#include <cfg.h>
+#include <daemons.h>
+#include <commands.h>
+#include <objects.h>
+#include <privs.h>
+#include "sefun.h"
+
+#include "/secure/sefun/absolute_value.c"
+#include "/secure/sefun/base_name.c"
+#include "/secure/sefun/communications.c"
+#include "/secure/sefun/convert_name.c"
+#include "/secure/sefun/copy.c"
+#include "/secure/sefun/domains.c"
+#include "/secure/sefun/economy.c"
+//#include "/secure/sefun/english.c"
+#include "/secure/sefun/events.c"
+#include "/secure/sefun/expand_keys.c"
+//#include "/secure/sefun/files.c"
+//#include "/secure/sefun/format_page.c"
+//#include "/secure/sefun/get_object.c"
+#include "/secure/sefun/identify.c"
+#include "/secure/sefun/interface.c"
+#include "/secure/sefun/light.c"
+#include "/secure/sefun/load_object.c"
+#include "/secure/sefun/log_file.c"
+#include "/secure/sefun/messaging.c"
+#include "/secure/sefun/morality.c"
+#include "/secure/sefun/mud_info.c"
+#include "/secure/sefun/ordinal.c"
+#include "/secure/sefun/parse_objects.c"
+#include "/secure/sefun/path_file.c"
+#include "/secure/sefun/percent.c"
+#include "/secure/sefun/persist.c"
+#include "/secure/sefun/pointers.c"
+#include "/secure/sefun/query_time_of_day.c"
+#include "/secure/sefun/absolute_path.c"
+#include "/secure/sefun/security.c"
+#include "/secure/sefun/strings.c"
+#include "/secure/sefun/this_agent.c"
+#include "/secure/sefun/time.c"
+#include "/secure/sefun/to_object.c"
+#include "/secure/sefun/translate.c"
+#include "/secure/sefun/user_exists.c"
+#include "/secure/sefun/user_path.c"
+#include "/secure/sefun/visible.c"
+#include "/secure/sefun/tail.c"
+#include "/secure/sefun/sockets.c"
+#include "/secure/sefun/local_time.c"
+//#include "/secure/sefun/get_livings.c"
+#include "/secure/sefun/get_verbs.c"
+#include "/secure/sefun/get_cmds.c"
+#include "/secure/sefun/get_stack.c"
+#include "/secure/sefun/timestamp.c"
+#include "/secure/sefun/duplicates.c"
+#include "/secure/sefun/reaper.c"
+#include "/secure/sefun/custom_path.c"
+#include "/secure/sefun/mappings.c"
+#include "/secure/sefun/dummy.c"
+#include "/secure/sefun/disable.c"
+#include "/secure/sefun/make_workroom.c"
+#include "/secure/sefun/query_invis.c"
+#include "/secure/sefun/rooms.c"
+#include "/secure/sefun/generic.c"
+#include "/secure/sefun/arrays.c"
+#include "/secure/sefun/reload.c"
+#include "/secure/sefun/wipe_inv.c"
+#include "/secure/sefun/numbers.c"
+#include "/secure/sefun/inventory.c"
+#include "/secure/sefun/findobs.c"
+#include "/secure/sefun/query_names.c"
+#include "/secure/sefun/ascii.c"
+#include "/secure/sefun/wild_card.c"
+#include "/secure/sefun/compare_array.c"
+#include "/secure/sefun/legacy.c"
+#include "/secure/sefun/atomize.c"
+#ifdef LIVEUPGRADE_SERVER
+#include "/secure/sefun/native_version.c"
+#endif
+#include "/secure/sefun/automap.c"
+
+string globalstr;
+mixed globalmixed, gargs, gfun, gdelay;
+int last_regexp = time();
+int regexp_count = 1;
+int max_regexp = 200;
+
+//For some reason, FluffOS read_file() will read
+//a zero-length file as a 65535 length T_INVALID variable.
+//This tends to screw things up for Dead Souls.
+varargs string read_file(string file, int start_line, int number_of_lines){
+    if(file_size(file) == 0) return "";
+    return efun::read_file(file, start_line, number_of_lines);
+}
+
+void reset_eval_cost(){
+    if((int)master()->valid_apply(({ "SECURE", "ASSIST" })))
+        efun::reset_eval_cost();
+}
+
+void set_eval_limit(int i){
+    if((int)master()->valid_apply(({ "SECURE", "ASSIST" })))
+        efun::set_eval_limit(i);
+}
+
+string debug_info(int debuglevel, mixed arg){
+    if((int)master()->valid_apply(({ "SECURE", "ASSIST" })))
+        return efun::debug_info(debuglevel, arg);
+    else return "This sefun is not available to unprivileged objects.";
+}
+
+string array groups(){
+    string *group_arr = ({});
+    string raw = read_file(CFG_GROUPS);
+    string *raw_arr = explode(raw,"\n");
+    foreach(string element in raw_arr){
+        string s1,s2,s3;
+        if(element[0..0] == "#"){
+            continue;
+        }
+        if(sscanf(element,"(%s)%s",s1,s2) < 1)
+            sscanf(element,"%s(%s)%s",s2,s1,s3);
+        if(s1) group_arr += ({ s1 });
+    }
+    return singular_array(group_arr);
+}
+
+varargs string socket_address(mixed arg, int foo){
+    //TODO define socket_address
+	//return efun::socket_address(arg, foo);
+	return "";
+}
+
+#if CALL_OUT_LOGGING
+//This is ugly and should not be used except in cases of dire
+//emergency when you can't figure out wtf is choking your mud.
+//This *will* break a bunch of stuff. You were warned.
+varargs int call_out(mixed fun, mixed delay, mixed args...){
+    gargs = args;
+    gfun = fun;
+    gdelay = delay;
+
+    if(pointerp(gfun) && !functionp(gfun)){
+        if(sizeof(gfun) >  1) gargs = gfun[1..];
+        gfun = gfun[0];
+    }
+
+    //This if() weeds out call_outs generated by objects in /secure and
+    ///daemon from being logged, since such objects will clog your log
+    //and anyway should not be behaving unpredictably.
+    if(strsrch(base_name(previous_object()),"/secure/")
+      && strsrch(base_name(previous_object()),"/daemon/")){
+        unguarded( (: write_file("/log/secure/callouts",timestamp()+" "+
+              identify(previous_object(-1))+" "+identify((gargs || gfun))+"\n") :) );
+    }
+
+    if(sizeof(gargs)) return efun::call_out(gfun, gdelay, gargs...);
+    else return efun::call_out(gfun, gdelay);
+}
+#endif
+
+//addr_server calls don't work well on Solaris and spam stderr
+string query_ip_name(object ob){
+    if(architecture() == "Solaris") return query_ip_number(ob);
+    else return efun::query_ip_name(ob);
+}
+
+function functionify(string str){
+    globalstr = str;
+    return (: globalstr :);
+}
+
+string *query_local_functions(mixed arg){
+    object ob;
+    string *allfuns;
+    string *ret = ({}); 
+    if(objectp(arg)) ob = arg;
+    else if(stringp(arg)) ob = load_object(arg);
+    allfuns = functions(ob);
+    foreach(string subfun in allfuns){
+        mixed thingy = function_exists(subfun,ob,1);
+        if(thingy && thingy == base_name(ob) && member_array(subfun,ret) == -1) 
+            ret += ({ subfun });
+    }
+    return ret;
+}
+
+object find_object( string str ){
+    object ret;
+    string err;
+    if(!str || !stringp(str)) return 0;
+    err = catch(ret = efun::find_object(str));
+    if(err || !ret) return 0;
+    if((int)master()->valid_apply(({ "SECURE", "ASSIST", "SNOOP_D" }))) return ret;
+    if(base_name(previous_object()) == SERVICES_D) return ret;
+    if(base_name(ret) == "/secure/obj/snooper") return 0;
+    if(archp(ret) && ret->GetInvis()) return 0;
+    else return ret;
+} 
+
+object find_player( string str ){
+    object ret = efun::find_player(str);
+    if((int)master()->valid_apply(({ "SECURE", "ASSIST", "SNOOP_D" }))) return ret;
+    if(base_name(previous_object()) == SERVICES_D) return ret;
+    if(ret && archp(ret) && ret->GetInvis()) return 0;
+    else return ret;
+}
+
+object *livings() {
+    object *privlivs = efun::livings();
+    object *unprivlivs = ({});
+#ifdef __FLUFFOS__
+    unprivlivs = filter(privlivs, (: !($1->GetInvis() && archp($1)) :) );
+#else
+    foreach(mixed dude in privlivs){
+        if(archp(dude) && dude->GetInvis()) continue;
+        unprivlivs += ({ dude });
+    }
+#endif
+    if((int)master()->valid_apply(({ "SECURE", "ASSIST", "SNOOP_D" }))) return privlivs;
+    if(base_name(previous_object()) == SERVICES_D) return privlivs;
+    else return unprivlivs;
+    //return efun::livings() - (efun::livings() - objects());
+}
+
+varargs mixed objects(mixed arg1, mixed arg2){
+    object array tmp_obs;
+    if(arg1) tmp_obs = efun::objects(arg1);
+    else tmp_obs = efun::objects();
+
+    if(!((int)master()->valid_apply(({ "SECURE", "ASSIST", "SNOOP_D" }))) &&
+      base_name(previous_object())  != SERVICES_D){
+#ifdef __FLUFFOS__
+        tmp_obs = filter(tmp_obs, (: !($1->GetInvis() && archp($1)) :) );
+#else
+        foreach(mixed dude in tmp_obs){
+            if(dude && archp(dude) && dude->GetInvis()) tmp_obs -= ({ dude });
+        }
+#endif
+    }
+    if(base_name(previous_object()) == SNOOP_D || archp(this_player())){
+        return tmp_obs;
+    }
+    if(!arg1){
+        return filter(tmp_obs, (: base_name($1) != "/secure/obj/snooper" :) );
+    }
+
+    if(arg1 && !arg2) {
+        object *ret_arr = ({});
+        if(!functionp(arg1)) return 0;
+        foreach(object ob in filter(tmp_obs, (: base_name($1) != "/secure/obj/snooper" :) )){
+            if(evaluate(arg1, ob)) ret_arr += ({ ob });
+        }
+        return ret_arr;
+    }
+
+    if(arg1 && arg2) {
+        object *ret_arr = ({});
+        if(!functionp(arg1)) return 0;
+        if(!objectp(arg2)) return 0;
+        foreach(object ob in filter(tmp_obs, (: base_name($1) != "/secure/obj/snooper" :) )){
+            if(call_other(arg2, arg1, ob)) ret_arr += ({ ob });
+        }
+        return ret_arr;
+    }
+
+    else return ({});
+}
+
+#ifdef __FLUFFOS__
+mixed array users(){
+    object *ret = filter(efun::users(), (: ($1) && environment($1) :) );
+    if(!((int)master()->valid_apply(({ "SECURE", "ASSIST", "SNOOP_D" }))) &&
+      base_name(previous_object())  != SERVICES_D)
+        ret = filter(ret, (: !($1->GetInvis() && archp($1)) :) );
+    return ret;
+}
+#else
+mixed array users(){
+    object *ret = ({});
+    if(sizeof(efun::users()))
+        foreach(mixed foo in efun::users()){
+        if(objectp(foo) && environment(foo)) ret += ({ foo });
+    }
+    if(!((int)master()->valid_apply(({ "SECURE", "ASSIST", "SNOOP_D" }))) &&
+      base_name(previous_object())  != SERVICES_D)
+        foreach(mixed foo in ret){
+        if(foo->GetInvis() && archp(foo)) ret -= ({ foo });
+    }
+    return ret;
+}
+#endif
+
+int destruct(object ob) {
+    string *privs;
+    string tmp;
+    int ok;
+
+    privs = ({ file_privs(file_name(ob)) });
+
+    if(tmp = query_privs(previous_object(0))){
+        if(previous_object(0) && previous_object(0) == ob) ok = 1;
+        if(member_array(PRIV_SECURE, explode(tmp, ":")) != -1) ok = 1;
+        if((int)master()->valid_apply(({ "ASSIST" }) + privs)) ok = 1;
+    }
+
+    if(DESTRUCT_LOGGING){
+        string stat = "FAIL";
+        if(ok) stat = "success";
+        log_file("destructs",timestamp()+"\n"+stat+"\n"+get_stack(1)+"\n--\n");
+    }
+    if(ok){ 
+	    efun::destruct(ob);
+		return 1;
+	} else 
+		return 0;
+}
+
+varargs void shutdown(int code) {
+    if(!((int)master()->valid_apply(({"ASSIST"}))) &&
+      !((int)master()->valid_apply(({"SECURE"})))) return;
+    if(this_player())
+        log_file("shutdowns", (string)this_player()->GetCapName()+
+          " shutdown "+mud_name()+" at "+ctime(time())+"\n");
+    else log_file("shutdowns", "Game shutdown by "+
+          file_name(previous_object(0))+" at "+ctime(time())+"\n");
+    efun::shutdown(code);
+}
+
+int valid_snoop(object snooper, object target){
+    if(member_group(target, PRIV_SECURE)) {
+        message("system", (string)snooper->GetCapName()+" is trying to snoop "
+          "you.", target);
+        if(!member_group(snooper, PRIV_SECURE)) return 0;
+    }
+    if(archp(snooper)) return 1;
+    if( base_name(snooper) == "/secure/obj/snooper" ) return 1;
+    //Uncomment the following line to let cres snoop players
+    //if(creatorp(snooper) && playerp(target)) return 1; 
+    if(snooperp(snooper) && creatorp(snooper) && playerp(target)) return 1;
+    return 0;
+}
+
+varargs object snoop(object who, object target) {
+    if(!target) return efun::snoop(who);
+    if(!creatorp(who) && base_name(who) != "/secure/obj/snooper" ) return 0;
+    if(!((int)master()->valid_apply(({ "ASSIST" })))) {
+        if(!((int)target->query_snoopable())) return 0;
+        else return efun::snoop(who, target);
+    }
+    else if(member_group(target, PRIV_SECURE)) {
+        message("system", (string)who->GetCapName()+" is now snooping "
+          "you.", target);
+        return efun::snoop(who, target);
+    }
+    else return efun::snoop(who, target);
+}
+
+object query_snoop(object ob) {
+    if(base_name(previous_object()) != SNOOP_D)
+        return 0;
+    return efun::query_snoop(ob);
+}
+
+object query_snooping(object ob) {
+    if(!((int)master()->valid_apply(({})))) return 0;
+    else return efun::query_snooping(ob);
+}
+
+int exec(object target, object src) {
+    string tmp;
+    int ret;
+    tmp = base_name(previous_object());
+    if(tmp != LIB_CONNECT && tmp != CMD_ENCRE && tmp != CMD_DECRE 
+      && tmp != SU && tmp != RELOAD_D) return 0;
+    ret = efun::exec(target, src);
+    return ret;
+}
+
+void write(string str) {
+    if(this_player()) message("my_action", str, this_player());
+    else efun::write(str);
+}
+
+void set_privs(object ob, string str) { return; }
+
+void notify_fail(string str) {
+    if( !this_player() ) return;
+    if( str[<1..] == "\n" ) str = str[0..<2];
+    this_player()->SetCommandFail(str);
+}
+
+/* want to handle colours, but do it efficiently as possible */
+string capitalize(mixed str) {
+    string *words, *tmp;
+    int i;
+
+    if(objectp(str)) str = str->GetKeyName();
+
+    /* error condition, let it look like an efun */
+    if( !str || str == "" ) return efun::capitalize(str);
+    /* most strings are not colour strings */
+    if( strlen(str) < 2 || str[0..1] != "%^" ) return efun::capitalize(str);
+    /* god help us */
+    words = explode(str, " ");
+    /* ok, this is strange, but remember, colours are all caps :) */
+    tmp = explode(words[0], "%^");
+    for(i=0; i<sizeof(tmp); i++) tmp[i] = efun::capitalize(tmp[i]);
+    words[0] = "%^" + implode(tmp, "%^") + "%^";
+    return implode(words, " ");
+}
+
+string *efuns(){
+    return sort_array(MASTER_D->GetEfuns(),1);
+}
+
+string *sefuns(){
+    return sort_array(functions(this_object()),1);
+}
+
+int efun_exists(string str){
+    if(member_array(str,MASTER_D->GetEfuns()) != -1) return 1;
+    return 0;
+}
+
+int sefun_exists(string str){
+    if(member_array(str,functions(this_object())) != -1) return 1;
+    return 0;
+}
+
+//---------- files.c ----------
+string gtempname, gfilename;
+
+int file_exists(string str) { 
+    if(!str) return 0;
+    return (file_size(str) > -1);
+}
+
+mixed lpc_file(string str){
+    if(!file_exists(str)){
+        if(file_exists(str+".c")) return str+".c";
+        else return 0;
+    }
+    else return str;
+}
+
+int directory_exists(string str) { return (file_size(str) == -2); }
+
+string save_file(string who) {
+    if( !stringp(who) ) error("Bad argument 1 to save_file().");
+    who = convert_name(who);
+    return (string)master()->player_save_file(who);
+}
+
+int indent_file(string filename){
+
+    string tempname;
+    tempname = "/tmp/indent."+time()+".tmp";
+
+    write_file(tempname,"I\n");
+
+    gtempname = tempname;
+    gfilename = filename;
+    if(!cp(filename,tempname+".dat")){
+        write("You don't have read access to "+filename);
+        return 0;
+    }
+
+    load_object("/secure/cmds/creators/lsed")->cmd(tempname+" "+tempname+".dat");
+
+    if(!unguarded((: cp(gtempname+".dat", gfilename) :)) ){
+        write("You don't have write access to "+filename);
+        rm(tempname+".dat");
+        rm(tempname);
+        return 0;
+    }
+
+    rm(tempname+".dat");
+    rm(tempname);
+    return 1;
+}
+
+int mkdir_recurse(string path){
+    string *path_arr = explode(path,"/");
+    string agglutinate = "";
+
+    if(directory_exists(path)) return 0;
+
+    foreach(string element in path_arr){
+        agglutinate += "/"+element;
+        if(!directory_exists(agglutinate)){
+            if(!mkdir(agglutinate)) return 0;
+        }
+    }
+    return 1;
+}
+
+//---------- format_page.c ----------
+varargs string format_page(string *items, int columns, int modifier) {
+    int width, i, j, x;
+    string ret;
+
+	write_file("log_gab", "format_page "+items+" cols "+columns);
+	
+    if(!columns) columns = 2;
+    ret = "";
+    if( this_player() ) width = ((int *)this_player()->GetScreen())[0];
+    else width = 80;
+    width = (width/columns) + modifier;
+    for(i=0, x = sizeof(items); i<x; i+=columns) {
+        for(j=0; j<columns; j++) {
+            if(i+j >= x) break;
+            ret += arrange_string(items[i+j], width);
+        }
+        ret += "\n";
+    }
+    return ret;
+}
+
+//---------- english.c ----------
+string *localcmds;
+
+string match_command(string verb){
+    string *local_arr;
+    localcmds = ({});
+    filter(this_player()->GetCommands(), (: localcmds += ({ $1[0] }) :));
+    localcmds += CMD_D->GetCommands();
+    localcmds += keys(VERBS_D->GetVerbs());
+	write_file("log_gab", "/secure/sefun/english.c match_commands: " +localcmds+"\n");
+    if(member_array(verb,localcmds) == -1){
+        if(alphap(verb)) local_arr = regexp(localcmds,"^"+verb);
+        if(sizeof(local_arr) == 1) {
+            return local_arr[0];
+        }
+    }
+    return "";
+}
+
+varargs string add_article(string str, int def) {
+    if( !stringp(str) ) {
+        error("Bad argument 1 to add_article().\n");
+    }
+    if( def ) {
+        str = remove_article(str);
+        return "the " + str;
+    }
+    if( !strlen(str) ) {
+        return str;
+    }
+    switch(str[0]) {
+    case 'a': case 'e': case 'i': case 'o': case 'u':
+    case 'A': case 'E': case 'I': case 'O': case 'U':
+        return "an " + str;
+
+    default:
+        return "a " + str;
+    }
+}
+
+string remove_article(string str) {
+    string tmp;
+
+    if( !stringp(str) ) error("Bad argument 1 to remove_article().\n");
+    if( sscanf(str, "the %s", tmp) ) return tmp;
+    if( sscanf(str, "a %s", tmp) ) return tmp;
+    if( sscanf(str, "an %s", tmp) ) return tmp;
+    return str;
+}
+
+string array explode_list(string list) {
+    string array items;
+    string one, two;
+
+    list = lower_case(list);
+    if( sscanf(list, "%s and %s", one, two) == 2 ) {
+        items = explode(one, ",") + explode(two, ",");
+    }
+    else {
+        items = explode(list, ",");
+    }
+    items = map(items, function(string str) {
+          if( !str ) {
+              return 0;
+          }
+          str = trim(str);
+          if( strlen(str) > 4 && str[0..3] == "and " ) {
+              str = str[4..];
+          }
+          str = remove_article(str);
+          if( strlen(str) > 3 && str[0..2] == "my " ) {
+              str = str[3..];
+          }
+          return str;
+        });
+      return filter(items, (: $1 && $1 != "" :));
+  }
+
+    varargs string item_list(mixed array items...) {
+        mapping list = ([]);
+        string str;
+        int maxi;
+
+        if( !sizeof(items) ){
+            error("Bad argument 1 to item_list().\n");
+        }
+        if( arrayp(items[0]) ) {
+            if( !sizeof(items[0]) ) {
+                return "";
+            }
+            items = items[0];
+        }
+        foreach(mixed value in items) {
+            if( objectp(value) ) {
+                if( living(value) ) {
+                    value = value->GetName();
+                }
+                else {
+                    value = value->GetShort();
+                }
+            }
+            if( !value ) {
+                continue;
+            }
+            if( !list[value] ) {
+                list[value] = 1;
+            }
+            else {
+                list[value]++;
+            }
+        }
+        maxi = sizeof(items = keys(list));
+        if( maxi < 1 ) {
+            return "";
+        }
+        str = consolidate(list[items[0]], items[0]);
+        if( maxi == 1 ) {
+            return str;
+        }
+        if( maxi > 2 ) {
+            str += ",";
+        }
+        for(int i=1; i<maxi; i++) {
+            if( i == maxi-1 ) {
+                str += " and ";
+            }
+            else {
+                str += " ";
+            }
+            str += consolidate(list[items[i]], items[i]);
+            if( i < maxi-1 ) {
+                str += ",";
+            }
+        }
+        return str;
+    }
+
+    string possessive_noun(mixed val) {
+        if(objectp(val)) val = (string)val->GetName();
+        else if(!stringp(val)) error("Bad argument 1 to possessive_noun().\n");
+        switch(val[strlen(val)-1]) {
+        case 'x': case 'z': case 's': return sprintf("%s'", val);
+        default: return sprintf("%s's", val);
+        }
+    }
+
+    string possessive(mixed val) {
+        switch(objectp(val) ? (string)val->GetGender() : (string)val) {
+        case "male": return "his";
+        case "female": return "her";
+        case "neutral": return "hir";
+        default: return "its";
+        }
+    }
+
+    string strip_article(mixed val) {
+        int x;
+
+        if( objectp(val) ) val = (string)val->GetShort();
+        x = strlen(val);
+        if( x <= 2 ) return val;
+        if( val[0..1] == "a " || val[0..1] == "A " ) return val[2..];
+        if( x <= 3 ) return val;
+        if( val[0..2] == "an " || val[0..2] == "An " ) return val[3..];
+        if( x <= 4 ) return val;
+        if( val[0..3] == "the " || val[0..3] == "The " ) return val[4..];
+        return val;
+    }
+
+    string nominative(mixed val) {
+        switch(objectp(val) ? (string)val->GetGender() : (string)val) {
+        case "male": return "he";
+        case "female": return "she";
+        case "neutral": return "sie";
+        default: return "it";
+        }
+    }
+
+    string objective(mixed val) {
+        switch(objectp(val) ? (string)val->GetGender() : (string)val) {
+        case "male": return "him";
+        case "female": return "her";
+        case "neutral": return "hir";
+        default: return "it";
+        }
+    }
+
+    string reflexive(mixed val) { return sprintf("%sself", objective(val)); }
+
+#if SEFUN_PLURALIZE 
+#define VOWELS ({"a","e","i","o","u"})
+
+#define ABNORMAL ([ "moose":"moose", "mouse":"mice", "die":"dice", "index":"indices", "human":"humans", "sheep":"sheep", "fish":"fish", "child":"children", "ox":"oxen", "tooth":"teeth", "deer":"deer", "sphinx":"sphinges" ])
+
+    string pluralize(mixed single) {
+        int x, i, y, ind;
+        string str, tmp, tmp1;
+        string *words;
+        string ret = "";
+        int reset = 0;
+        string clean_str = "";
+        string modulo = "";
+
+        if(last(single,9) == "%^RESET%^"){
+            reset = 1;
+            single = truncate(single,9);
+        }
+
+        if(objectp(single)) {
+            if(str = (string)single->query_plural_name()){
+                return str;
+            }
+            else str = (string)single->GetKeyName();
+        }
+        else if(stringp(single)) str = (string)single;
+        else error("Bad argument 1 to pluralize()");
+
+        if(!str){
+            return str;
+        }
+
+        clean_str = strip_colours(str);
+        modulo = replace_string(str, clean_str, "");
+        x = strlen(clean_str);
+
+        if(ABNORMAL[strip_colours(str)]){
+            if(reset){
+                ret = ABNORMAL[clean_str];
+                ret = modulo + ret + "%^RESET%^";
+            }
+            else ret = ABNORMAL[strip_colours(str)];
+            return ret;
+        }
+
+        if(x > 1) {
+            tmp = clean_str[x-2..x-1];
+            switch(tmp) {
+            case "ch": case "sh":
+                ret = sprintf("%ses", clean_str);
+                break;
+            case "ff": case "fe":
+                ret = sprintf("%sves", clean_str[0..x-3]);
+                break;
+            case "us":
+                ret = sprintf("%si", clean_str[0..x-3]);
+                break;
+            case "um":
+                ret = sprintf("%sa", clean_str[0..x-3]);
+                break;
+            case "ef":
+                ret = sprintf("%ss", clean_str);
+                break;
+            }
+        }
+
+        tmp = clean_str[x-1..x-1];
+        switch(tmp) {
+        case "o": case "x": case "s":
+            ret = sprintf("%ses", clean_str);
+            break;
+        case "f":
+            ret = sprintf("%sves", clean_str[0..x-2]);
+            break;
+        case "y":
+            if(member_array(clean_str[x-2..x-2],VOWELS)!=-1)
+                ret = sprintf("%ss",clean_str);
+            else
+                ret = sprintf("%sies", clean_str[0..x-2]);
+            break;
+        }
+        if(sizeof(ret)){
+            if(reset){
+                ret = modulo + ret + "%^RESET%^";
+            }    
+            return ret;
+        }
+        ret = sprintf("%ss", clean_str);
+        if(reset){
+            ret = modulo + ret + "%^RESET%^";
+        }
+        return ret;
+    }
+#endif
+
+    string cardinal(int x) {
+        string tmp;
+        int a;
+
+        if(!x) return "zero";
+        if(x < 0) {
+            tmp = "negative ";
+            x = absolute_value(x);
+        }
+        else tmp = "";
+        switch(x) {
+        case 1: return tmp+"one";
+        case 2: return tmp+"two";
+        case 3: return tmp+"three";
+        case 4: return tmp+"four";
+        case 5: return tmp+"five";
+        case 6: return tmp+"six";
+        case 7: return tmp+"seven";
+        case 8: return tmp+"eight";
+        case 9: return tmp+"nine";
+        case 10: return tmp+"ten";
+        case 11: return tmp+"eleven";
+        case 12: return tmp+"twelve";
+        case 13: return tmp+"thirteen";
+        case 14: return tmp+"fourteen";
+        case 15: return tmp+"fifteen";
+        case 16: return tmp+"sixteen";
+        case 17: return tmp+"seventeen";
+        case 18: return tmp+"eighteen";
+        case 19: return tmp+"nineteen";
+        case 20: return tmp+"twenty";
+        default:
+            if(x > 1000000000) return "over a billion";
+            else if(a = x /1000000) {
+                if(x = x %1000000) 
+                    return sprintf("%s million %s", cardinal(a), cardinal(x));
+                else return sprintf("%s million", cardinal(a));
+            }
+            else if(a = x / 1000) {
+                if(x = x % 1000) 
+                    return sprintf("%s thousand %s", cardinal(a), cardinal(x));
+                else return sprintf("%s thousand", cardinal(a));
+            }
+            else if(a = x / 100) {
+                if(x = x % 100) 
+                    return sprintf("%s hundred %s", cardinal(a), cardinal(x));
+                else return sprintf("%s hundred", cardinal(a));
+            }
+            else {
+                a = x / 10;
+                if(x = x % 10) tmp = "-"+cardinal(x);
+                else tmp = "";
+                switch(a) {
+                case 2: return "twenty"+tmp;
+                case 3: return "thirty"+tmp;
+                case 4: return "forty"+tmp;
+                case 5: return "fifty"+tmp;
+                case 6: return "sixty"+tmp;
+                case 7: return "seventy"+tmp;
+                case 8: return "eighty"+tmp;
+                case 9: return "ninety"+tmp;
+                default: return "error";
+                }
+            }
+        }
+    }
+
+    varargs string conjunction(mixed expressions, string coordinator) {
+        int size;
+        string tmp;
+
+        if(!expressions) error("Bad argument 1 to conjunction().\n");
+        else if(stringp(expressions)) expressions = ({ expressions });
+        else if(!pointerp(expressions))
+            error("Bad argument 1 to conjunction().\n");
+
+        size = sizeof(expressions);
+        if(size < 2) return expressions[0];
+
+        // Form the conjunction.
+        if(!coordinator) coordinator = "and";
+        tmp = "";
+        for(int i = 0; i < size; i++) {
+            tmp += expressions[i];
+            if(i < size - 2) tmp += ", ";
+            else return tmp + ", " + coordinator + " " + expressions[size - 1];
+        }
+    }
+
+    string consolidate(int x, string str) {
+        string array words;
+        string tmp;
+
+        if( x == 1 || !sizeof(str) ) return str;
+        words = explode(str, " ");
+        if( sscanf(words[<1], "(%s)", tmp) ) {
+            if( sizeof(words) == 1 ) 
+                return "(" + consolidate(x, tmp) + ")";
+            else return consolidate(x, implode(words[0..<2], " ")) + 
+                " (" + tmp + ")";
+        }
+        if( sscanf(words[<1], "[%s]", tmp) ) {
+            if( sizeof(words) == 1 )
+                return "[" + consolidate(x, tmp) + "]";
+            else return consolidate(x, implode(words[0..<2], " ")) +
+                " [" + tmp + "]";
+        }
+        if( words[0][0..1] == "%^" ) {
+            string array parts;
+            string part, colour = "";
+            int i = 0;
+
+            parts = explode(words[0], "%^");
+            if( sizeof(parts) == 1 ) {
+                if( sizeof(words) == 1 ) return words[0];
+                else return words[0] + consolidate(x, implode(words[1..], " "));
+            }
+
+            foreach(part in parts) {
+                if( sizeof(part) && !sizeof(strip_colours("%^" + part + "%^")) )
+                    colour += ("%^" + part + "%^"); 
+                else return colour + consolidate(x, 
+                      (implode(parts[i..], "%^")) + " " + 
+                      (implode(words[1..], " ")) );
+                i++;
+            }
+            return words[0] + " " + consolidate(x, implode(words[1..], " "));
+
+        }
+        if( member_array(lower_case(strip_colours(words[0])), 
+            ({"a", "an", "the", "one"}) ) > -1 ) words = words[1..];
+        return (cardinal(x) + " " + pluralize(implode(words, " ")));
+    }
+
+//----------- get_object.c
+
+    /*
+    //      get_object() and get_objects()
+    //      Created by Pallando@Ephemeral Dale   (92-06)
+    //      Created by Watcher@TMI  (92-09-27)
+    //      Revised by Watcher and Pallando (92-12-11)
+    //      Re-written by Pallando (92-12-18)
+    //      get_objects() added by Pallando@Tabor (93-03-02)
+    //      changed to use get_path() by Pallando@Dead Souls (93-05-28)
+    //
+    //      Use all possible methods to locate an object by the inputed
+    //      name and return the object pointer if located.
+    // Ideas for future expansion (please, anyone feel free to add them if they
+    //                             have the time)
+    //   "wizards" - the subset of "users" who are wizards.
+    //   check the capitalized and lower_case version of str
+    //   check wizard's home directories.
+    //   :c - suffix indicating the children() of the previous object's base name.
+    //   :s - shadow of an object
+    //   :>func - the object returned by the base object->func() (useful for things
+    //            like referencing the monster attacking someone.
+    */
+
+    varargs object get_object( string str, object player )
+    {
+        object what,ret;
+        mixed tmp;
+
+        // Prevent wizards finding things they shouldn't.
+
+        if( !str ) return 0;
+        if( !player || !living( player ) ) player = this_player();
+        if( sscanf( str, "@%s", tmp )         &&
+          ( tmp = get_object( tmp, player ) ) &&
+          ( what = environment( tmp )       )    )
+            return what;
+        if( player )    //  Check existance of this_player()
+        {
+            if( str == "me" ) return player;
+            if( what = present( str, player ) ) return what; // Inventory check
+            if( what = environment( player ) )               // Environment check
+            {
+                if (str == "here" || str == "env" || str == "environment")
+                    return what;
+                if( what = present( str, what ) ) return what;
+            }
+        }
+
+        // Call might be made by a room so make a previous_object() check
+        // first just to be sure
+
+        if( what = present( str, previous_object() ) )  return what;
+
+        //  Check to see if a living object matches the name
+
+        if( what = find_player( str ) ) return what;
+        if( what = find_living( str ) ) return what;
+
+        //  Search for a matching file_name, completing path with
+        //  user's present path
+
+        if( player )
+        {
+            //  this option removed because Dead Souls doesn't support cwf
+            //  if( str == "cwf" ) str = (string)player-> query( "cwf" );
+            str = absolute_path( (string)player-> get_path(), str );
+        }
+
+        if( catch(ret = find_object(str)) ) return 0;
+
+        if(!ret && (file_exists(str) || file_exists(str+".c"))) ret = load_object(str);
+
+        //  Finally return any object found matching the requested name
+
+        return ret;
+    }
+
+    // Created by Pallando@Tabor (93-03-02)
+    // player - as per get_object()
+    // no_arr - if specified, only 0 or an object will be returned,
+    //          otherwise an array of objects may also be returned.
+    // str - eg
+    //   "pallando" - returns the object, /lib/user#123
+    //   "pallando:i" - returns pallando's inventory
+    //   "pallando:e" - returns pallando's environment
+    //   "pallando:e:d:12" - returns the 12th object in the deep inventory of
+    //                       the room that pallando is in.
+    //   "caractacus:e:lady" - finds a lady of the court of King Caractacus 8-)
+    //   "users:rod" - searches the inventories of all users for a rod.
+    //   "users:e:guard" - searches the environments of all users for a guard.
+    varargs mixed get_objects( string str, object player, int no_arr )
+    {
+        mixed base, tmp, ret;
+        object what;
+        int i, s;
+        // Hmm.  i and s do several jobs here.  It would be clearer to use different
+        // variables (with longer names) for each job.
+        // Is it worth slowing the function (using more memory) to do this?
+
+
+        if( !str ) return 0;
+        s = strlen( str );
+        i = s;
+        while( i-- && ( str[i..i] != ":" ) ); // a reverse sscanf
+        if( ( i > 0 ) && ( i < ( s - 1 ) ) ) // of form "%s:%s"
+        {
+            base = get_objects( str[0..(i-1)], player );
+            str = str[(i+1)..s];
+            if( !base ) return 0;
+            if( !pointerp( base ) ) base = ({ base });
+            s = sizeof( base );
+            ret = ({ });
+            if( str == "e" )
+            {
+                while( s-- )
+                    if( tmp = environment( base[s] ) )
+                        ret += ({ tmp });
+            } else if( str == "i" ) {
+                while( s-- )
+                    if( tmp = all_inventory( base[s] ) )
+                        ret += ( pointerp( tmp ) ? tmp : ({ tmp }) );
+            } else if( str == "d" ) {
+                while( s-- )
+                    if( tmp = deep_inventory( base[s] ) )
+                        ret += ( pointerp( tmp ) ? tmp : ({ tmp }) );
+            } else if( sscanf( str, "%d", i ) ) {
+                if( ( i > -1 ) && ( i < s ) ) return base[i];
+                else return 0;
+            } else {
+                // This is the location to add more syntax options if wanted such as
+                // ith item in jth base object, all such items in all base objects, etc
+                while( s-- )
+                    if( what = present( str, base[s] ) )
+                        return what;
+                return 0;
+            }
+            switch( sizeof( ret ) )
+            {
+            case 0: return 0;
+            case 1: return ret[0];
+            }
+            return( no_arr ? ret[0] : ret );
+        }
+        if( str == "users" )
+        {
+            ret = users();
+            if( !no_arr ) return ret;
+            if( sizeof( ret ) ) return ret[0];
+            return 0;
+        }
+        return get_object( str, player );
+    }
+
+    /*
+      NB
+
+      It would be fairly simple to combine these two functions into one
+    varargs object get_object( string str, object player, int arr_poss )
+      which will only return a single object unless the array_possible flag
+      is passed.
+
+      I have chosen not to do this however, since some muds may not wish to
+      use the more complicated search routines and keeping get_objects() as
+      a seperate simul_efun makes it easier to disable.
+    */
+
+//---------- getlivings.c ----------
+    varargs object array get_livings(object ob,int foo){
+        object *stuff,*lstuff,*istuff;
+        int i;
+        if(!ob) return ({});
+        stuff=all_inventory(ob);
+        lstuff = ({});
+        for(i=0;i<sizeof(stuff);i++){
+            if(living(stuff[i]) && !sizeof(lstuff)) lstuff = ({stuff[i]});
+            if(living(stuff[i]) && sizeof(lstuff) > 0 &&
+              member_array(stuff[i],lstuff) == -1) lstuff += ({stuff[i]});
+        }
+
+        if(foo == 1){
+            istuff=({});
+            for(i=0;i<sizeof(lstuff);i++){
+                if( interactive(lstuff[i]) && !sizeof(istuff) ) istuff = ({lstuff[i]});
+                if( interactive(lstuff[i]) && sizeof(istuff)> 0 &&
+                  member_array(lstuff[i],istuff) == -1) istuff+= ({lstuff[i]});
+            }
+            if(sizeof(istuff) > 0) return istuff;
+            if(!sizeof(istuff)) return 0;
+        }
+
+        if(foo == 2){
+            istuff=({});
+            for(i=0;i<sizeof(lstuff);i++){
+                if( !interactive(lstuff[i]) && !sizeof(istuff) ) istuff = ({lstuff[i]});
+                if( !interactive(lstuff[i]) && sizeof(istuff)> 0 &&
+                  member_array(lstuff[i],istuff) == -1) istuff+= ({lstuff[i]});
+            }
+            if(sizeof(istuff) > 0) return istuff;
+            if(!sizeof(istuff)) return 0;
+        }
+
+        if(sizeof(lstuff) > 0)      return lstuff;
+        if(!sizeof(lstuff)) return 0;
+    }
+
+    varargs object get_random_living(object room, int foo){
+        object *livings;
+
+        if(!foo) foo = 0;
+
+        livings = get_livings(room, foo);
+        foo = random(sizeof(livings));
+
+        return livings[foo];
+    }
+
+
+
+
+
+
+
+

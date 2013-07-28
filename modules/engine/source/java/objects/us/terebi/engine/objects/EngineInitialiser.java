@@ -73,6 +73,8 @@ public class EngineInitialiser
         ExecutionTimeCheck check = new ExecutionTimeCheck(_config.getLong(ConfigNames.MAX_EVAL_TIME_INIT, 30000));
         try
         {
+        	//start the callout manager
+        	_context.callout().start();
             synchronized (_context.lock())
             {
                 check.begin();

@@ -70,8 +70,13 @@ public class CallOtherEfun extends AbstractEfun implements FunctionSignature, Ca
     {
         LpcValue arg1 = arguments.get(0);
         LpcValue arg2 = arguments.get(1);
-        List< ? extends LpcValue> args = arguments.get(2).asList();
-
+        List< ? extends LpcValue> args = null;
+        if(arguments.size() == 3){
+             args = arguments.get(2).asList();
+        } else {
+        	args = new ArrayList<LpcValue> ();
+        }
+        
         return callOther(arg1, arg2, args);
     }
 

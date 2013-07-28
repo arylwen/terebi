@@ -63,6 +63,9 @@ public class FileNameEfun extends AbstractEfun implements FunctionSignature, Cal
             obj = arguments.get(0).asObject();
         }
         String name = obj.getCanonicalName();
+        //to make up for windows issues
+        name = name.replace('\\', '/');
+        name = name.replace("//", "/");
         return new StringValue(name);
     }
 

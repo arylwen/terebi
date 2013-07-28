@@ -1,0 +1,59 @@
+General Observations:
+1. The FluffOs driver tolerated signatures out of sync with the implementation, terebi doesn't
+2. The valid_apply doesn't work correctly so it is removed in most places, to be added later
+3. The old class format (.o) is incompatible so the saved class, race, map list needs to be rebuilt
+4. FluffOS is tolerant to constructs like ;;, terebi is not
+5. FluffOS allows extra statements inside a switch, terebi does not
+6. FluffOs would allow int Size = Races[str]["Size"]; where str is not a member in Races, terebi would break
+7. FluffOs allows  if( !str = GetLong(args) ), terebi requires the assignment separated
+8. FluffOs allows mixed args... while terebi requires mixed *args...
+9. terebi has issues finding inherited methods when they are not present in the parent class, but upper on the hierarchy; stub methods calling the parent need to be added
+10. FluffOs allows the same class to be inherited twice from different branches of the hierarchy, terebi complais of duplicate methods
+11. map doesn't work; the compiler generates the incorrect cast and map failes with ClassCastException. All map statements need to be rewritten as:
+           //map(item, (: AddItem($1, $(val)) :));
+			foreach(mixed aitem in item) AddItem(aitem, val);
+ 12.
+
+
+1. /cmds/common/help.c - added needed additional parameter
+2. /daemon/include/saeasons.h - fixed method signature
+3. /daemon/classes.h - added initialisation for a handful of classes to rebuild classes.o; removed valid_apply
+4. /daemon/command.c - debug info
+5. /daemon/help.c - removed extranous ;
+6. /daemon/races.c - added initilization and removed valid_apply; fixed swithc statement, fixed some null pointers
+7. /daemon/seasion.c - fixed the not in the conditional statement
+8. /daemon/soul.c - fixed mixed args issues
+9. /daemon/verb.c - fixed the assignment inside the condition
+10. /domains/campus/npc/jennybot.c - fixed switch statement, added stubs, fixed assigment in condition
+11. /domains/campus/obj/map.c - fixed duplicate inheritance
+12. /domains/campus/obj/note.c - fixed duplicate inheritance
+13. /domains/default/room/start.c - debug info
+14. /lib/comp/seal.c - fixed the inheritance reference for methods
+15. /lib/comp/weapon.c - added the corect parameters
+16. /lib/event/close.c - added the corect parameters
+17. /lib/event/describe.c - fixed assignment in condition
+18. /lib/event/drop.c - added the corect parameters
+19. /lib/event/fall.c - added the corect parameters
+20. /lib/event/get_from.c - added the corect parameters
+21. /lib/event/lock.c - added the corect parameters
+22. /lib/event/look.c - replaced map statemnt
+23. /lib/event/poison.c - added the corect parameters
+24. /lib/event/shoot.c - mixed args issue
+25. /lib/include/body.h - fixed signatures
+26. /lib/include/door.h - fixed signatures
+27. /lib/include/exits.h - fixed signatures
+28. /lib/include/genetics.h - fixed signatures
+29. /lib/include/interactive.h - fixed signatures
+30. /lib/include/interface.h - fixed signatures
+31. /lib/include/living.h - fixed signatures
+32. /lib/include/npc.h - fixed signatures
+33. /lib/include/pager.h - fixed signatures
+34. /lib/include/player.h - fixed signatures
+35. /lib/include/talk.h - fixed signatures
+36. /lib/lvs/abilities.c - mixed args issue
+37. /lib/lvs/position.c - mixed args issue
+
+
+
+
+

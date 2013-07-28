@@ -2,7 +2,6 @@
 <classpath>
 	<classpathentry kind="src" path="source/java/plugin"/>
 	<classpathentry kind="src" path="source/java/crypt"/>
-	<classpathentry kind="lib" path="lib/crypt.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/terebi.engine"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/terebi.lpc"/>

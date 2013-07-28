@@ -54,9 +54,15 @@ public class InteractiveEfun extends AbstractEfun implements FunctionSignature, 
     }
 
     public LpcValue execute(List< ? extends LpcValue> arguments)
-    {
+    {    	
         checkArguments(arguments);
-        ObjectInstance instance = (arguments.isEmpty() ? ThisObjectEfun.this_object() : arguments.get(0).asObject());
+        //aelyah ObjectInstance instance = (arguments.isEmpty() ? ThisObjectEfun.this_object() : arguments.get(0).asObject());
+        ObjectInstance instance = null;
+        if(arguments.isEmpty() || arguments.get(0).getActualType().equals(Types.NIL)){
+        	instance =  ThisObjectEfun.this_object() ;
+        } else {
+        	instance = arguments.get(0).asObject();
+        }
         return getValue(ObjectShell.isConnectionObject(instance));
     }
 

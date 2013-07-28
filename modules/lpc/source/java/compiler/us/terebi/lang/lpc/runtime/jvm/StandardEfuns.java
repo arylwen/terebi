@@ -25,6 +25,7 @@ import java.util.Map;
 
 import us.terebi.lang.lpc.runtime.jvm.context.Efuns;
 import us.terebi.lang.lpc.runtime.jvm.context.MappedEfuns;
+import us.terebi.lang.lpc.runtime.jvm.efun.AcosEfun;
 import us.terebi.lang.lpc.runtime.jvm.efun.ArraypEfun;
 import us.terebi.lang.lpc.runtime.jvm.efun.BindEfun;
 import us.terebi.lang.lpc.runtime.jvm.efun.BufferpEfun;
@@ -64,6 +65,7 @@ import us.terebi.lang.lpc.runtime.jvm.efun.ObjectpEfun;
 import us.terebi.lang.lpc.runtime.jvm.efun.ObjectsEfun;
 import us.terebi.lang.lpc.runtime.jvm.efun.OriginEfun;
 import us.terebi.lang.lpc.runtime.jvm.efun.PreviousObjectEfun;
+import us.terebi.lang.lpc.runtime.jvm.efun.PowEfun;
 import us.terebi.lang.lpc.runtime.jvm.efun.QueryIdleEfun;
 import us.terebi.lang.lpc.runtime.jvm.efun.QueryIpNameEfun;
 import us.terebi.lang.lpc.runtime.jvm.efun.QueryIpNumberEfun;
@@ -72,6 +74,7 @@ import us.terebi.lang.lpc.runtime.jvm.efun.QuerySnoopingEfun;
 import us.terebi.lang.lpc.runtime.jvm.efun.RandomEfun;
 import us.terebi.lang.lpc.runtime.jvm.efun.ShutdownEfun;
 import us.terebi.lang.lpc.runtime.jvm.efun.SnoopEfun;
+import us.terebi.lang.lpc.runtime.jvm.efun.SqrtEfun;
 import us.terebi.lang.lpc.runtime.jvm.efun.StoreVariableEfun;
 import us.terebi.lang.lpc.runtime.jvm.efun.StringpEfun;
 import us.terebi.lang.lpc.runtime.jvm.efun.TerminalColourEfun;
@@ -262,6 +265,9 @@ public class StandardEfuns
         public static final Efun intp = new IntpEfun();
         public static final Efun floatp = new IntpEfun();
         public static final Efun random = new RandomEfun();
+        public static final Efun sqrt = new SqrtEfun();
+        public static final Efun pow = new PowEfun();
+        public static final Efun acos = new AcosEfun();
     }
 
     public static class CALLS

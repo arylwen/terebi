@@ -19,8 +19,11 @@
 
 package us.terebi.engine.server;
 
+import org.apache.log4j.Logger;
+
 import us.terebi.lang.lpc.runtime.LpcValue;
 import us.terebi.lang.lpc.runtime.ObjectInstance;
+import us.terebi.lang.lpc.runtime.jvm.efun.file.GetDirectoryInfoEfun;
 import us.terebi.lang.lpc.runtime.jvm.support.MiscSupport;
 import us.terebi.lang.lpc.runtime.jvm.value.StringValue;
 import us.terebi.lang.lpc.runtime.util.Apply;
@@ -31,12 +34,15 @@ import us.terebi.net.core.Connection;
  */
 public class ProcessInputHandler implements InputHandler
 {
+	private final Logger LOG = Logger.getLogger(ProcessInputHandler.class);
+	
     public static final ProcessInputHandler INSTANCE = new ProcessInputHandler();
 
     private static final Apply PROCESS_INPUT = new Apply("process_input");
 
     public String inputReceived(ObjectInstance user, Connection connection, String line)
     {
+    	LOG.info("Processing input: "+line+" for "+user);
         LpcValue result = PROCESS_INPUT.invoke(user, new StringValue(line));
         if (MiscSupport.isNothing(result))
         {

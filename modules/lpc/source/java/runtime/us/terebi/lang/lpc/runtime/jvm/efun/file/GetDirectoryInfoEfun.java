@@ -72,7 +72,11 @@ public class GetDirectoryInfoEfun extends FileEfun implements FunctionSignature,
     {
         checkArguments(arguments);
         String path = arguments.get(0).asString();
-        long flag = arguments.get(1).asLong();
+        
+        //to support both forms
+        long flag = 0;
+        if(arguments.size() == 2)
+            flag = arguments.get(1).asLong();
 
         path = path.replace("//", "/");
         try

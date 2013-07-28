@@ -92,18 +92,18 @@
       <format property="date" pattern="yyyy-MM-dd" locale="en,AU"/>
       <format property="time" pattern="HH:mm"      locale="en,AU"/>
     </tstamp>
-    <exec executable="hg" outputproperty="hg.version" >
+    <!-- GC exec executable="hg" outputproperty="hg.version" >
       <arg value="id" />
       <arg value="-i" />
-    </exec>
+    </exec-->
     <mkdir dir="${dir.output.dist}" />
     <jar destfile="${dir.output.dist}/${ant.project.name}.jar">
       <manifest>
         <attribute name="Implementation-Vendor"   value="Terebi"/>
         <attribute name="Implementation-Title"    value="Terebi Game Engine"/>
         <attribute name="Implementation-URL"      value="http://www.terebi.us/"/>
-        <!-- <attribute name="Implementation-Version" value="1.0.0beta2"/> -->
-        <attribute name="Implementation-Revision" value="${hg.version}"/>
+        <attribute name="Implementation-Version" value="1.0.0beta2"/>
+        <!--attribute name="Implementation-Revision" value="${hg.version}"/-->
         <attribute name="Built-Date"              value="${tstamp.date} ${tstamp.time}"/>
       </manifest>
       <fileset dir="${dir.output.classes}" />

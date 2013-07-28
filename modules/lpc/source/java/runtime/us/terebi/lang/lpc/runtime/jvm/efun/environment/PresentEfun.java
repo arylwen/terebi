@@ -64,11 +64,12 @@ public class PresentEfun extends AbstractEfun implements FunctionSignature, Call
     public LpcValue execute(List< ? extends LpcValue> arguments)
     {
         checkArguments(arguments, 1);
-        boolean present = present(arguments);
+        ObjectInstance present = present(arguments);
         return getValue(present);
     }
 
-    private boolean present(List< ? extends LpcValue> arguments)
+    //private boolean present(List< ? extends LpcValue> arguments)
+    private ObjectInstance present(List< ? extends LpcValue> arguments)
     {
         List<ObjectInstance> inventory;
         if (arguments.size() < 2)
@@ -84,20 +85,22 @@ public class PresentEfun extends AbstractEfun implements FunctionSignature, Call
             inventory = Environment.getInventory(obj, false);
         }
 
-        LpcValue arg1 = arguments.get(0);
-        if (MiscSupport.isObject(arg1))
+        LpcValue arg0 = arguments.get(0);
+        if (MiscSupport.isObject(arg0))
         {
-            return inventory.contains(arg1.asObject());
+            if (inventory.contains(arg0.asObject())){
+            	return arg0.asObject();
+            }
         }
 
         for (ObjectInstance object : inventory)
         {
-            if (ID.invoke(object, arg1).asBoolean())
+            if (ID.invoke(object, arg0).asBoolean())
             {
-                return true;
+                return object;
             }
         }
-        return false;
+        return null;
     }
 
 }

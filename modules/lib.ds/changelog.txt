@@ -1,0 +1,29 @@
+1. Removed hg from the build files
+2. Upgraded Ivy to 2.3.0
+3. EngineInitialiser - activated the call-out manager
+4. ObjectShell - added debug info
+5. ProcessInputHandler - added debug info
+6. ds.terebi.config - added lib/invlude to the global include directories
+7. LpcCompilerObjectManager - do not compile a class if already added, however do not stop processing. This allowd to load master.c, that has circular dependencies
+8. StandardEFuns - added acos, pow and sqrt
+9. AbstractObjectDefinition - do not load master for master (prevent a cycle here)
+10. LpcParameter - do not generate varargs by default, as the annotation would generate the parameter anyway; the android dexer complain about a parameter defined twice (while desktop java doesn't)
+11.CallOutManager - fixed the deadlock between add and processNextCallout
+12. CallOtherEfun - call other doesn't always have 3 arguments - fixed the nullpointer exception
+13. FileNameEFun - support for windows file names
+14. LivingEfun - provided implementation - nit compatible with the classic definition, needs revision
+15. MasterEFun - changed to return NIL rather than throw NullPointerException - masteris not available until is loaded
+16. TerminalColourEfun - changed the regex to strip only the color and not the text
+17. CallOutEfun - added debug info
+18. MoveObjectEfun - added support for add_action - call the init in the other objects per mud rules; TODO - implement removing the actions from the previous env
+19. PresentEfun - changed to return an object insetad of int
+20. GetDirectoryInfoEfun - added support for both arguments
+21. ExecutionTImeCheck - ignore if not generated instead of interrupting the mud - TODO review the compiler and find out why it is not generated on getLocation
+22. Apply - debug info
+23. TelnetChannelConnection - debug info
+24. CommandEfun - provided implementation, including for commands in other objects
+25. ActionHandler - provided support for cmdAll - I opted for this rather than implementing process_command in the driver
+26. InteractiveEFun - support for the nil argument (rather than combing the lib for the concrete instances)
+27. ReceiveEFun - debug info
+28. WriteEfun - debug info
+29. ObjectSerializer - fixed the array and map serialization; TODO fix the function serialization

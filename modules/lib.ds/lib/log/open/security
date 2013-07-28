@@ -1,0 +1,8 @@
+
+3913.07.14-08.15 PLAYERS_D breach: ({ OBJ( /secure/lib/connect#1) }) 
+0:"get_stack".OBJ(/secure/sefun/sefun)."get_stack"
+3913.07.14-08.23 PLAYERS_D breach: ({ OBJ(writeous /secure/lib/connect#1), OBJ(writeous /secure/lib/connect#1) }) 
+0:"get_stack".OBJ(/secure/sefun/sefun)."get_stack"
+1:"validate".OBJ(writeous /secure/lib/connect#1)."validate"
+2:"GetPlayerData".OBJ(writeous /secure/lib/connect#1)."GetPlayerData"
+3:"InputPassword".OBJ(writeous /secure/lib/connect#1)."InputPassword"

@@ -18,6 +18,8 @@
 package us.terebi.plugins.action.handler;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 
@@ -28,8 +30,8 @@ import us.terebi.lang.lpc.runtime.AttributeMap;
 import us.terebi.lang.lpc.runtime.Callable;
 import us.terebi.lang.lpc.runtime.LpcValue;
 import us.terebi.lang.lpc.runtime.ObjectInstance;
-import us.terebi.lang.lpc.runtime.jvm.context.RuntimeContext;
 import us.terebi.lang.lpc.runtime.jvm.context.CallStack.Origin;
+import us.terebi.lang.lpc.runtime.jvm.context.RuntimeContext;
 import us.terebi.lang.lpc.runtime.jvm.exception.InternalError;
 import us.terebi.lang.lpc.runtime.jvm.support.MiscSupport;
 import us.terebi.lang.lpc.runtime.jvm.value.StringValue;
@@ -82,6 +84,7 @@ public class ActionHandler implements InputHandler
 
     public static void addAction(ObjectInstance player, Action action)
     {
+    	LOG.info("Adding action " + action + "to " + player);
         ActionSet actions = getActions(player);
         actions.add(action);
     }
@@ -142,7 +145,17 @@ public class ActionHandler implements InputHandler
 
         ActionSet actionSet = getActions(user);
         Iterable<Action> actions = actionSet.find(verb);
+        //remove cmdAll from the list if there are others
+        List<Action> realActions = new ArrayList<Action>();
         for (Action action : actions)
+        {
+        	if(!action.toString().contains("cmdAll"))
+        	{
+        		realActions.add(action);
+        	}
+        }
+        Iterable<Action> toExecute = (realActions.size()>=1)?realActions:actions;
+        for (Action action : toExecute)
         {
             if (LOG.isDebugEnabled())
             {
@@ -157,7 +170,12 @@ public class ActionHandler implements InputHandler
                 attributes.set(ATTR_VERB, verb);
             }
 
-            LpcValue result = new StackCall(action.handler, Origin.DRIVER).execute(new StringValue(rest));
+            LpcValue result = null;
+            if(action.toString().contains("cmdAll")){
+            	result = new StackCall(action.handler, Origin.DRIVER).execute(new StringValue(input));            	
+            } else {
+            	result = new StackCall(action.handler, Origin.DRIVER).execute(new StringValue(rest));
+            }
             attributes.remove(ATTR_VERB);
             if (result.asBoolean())
             {

@@ -347,22 +347,31 @@ public class ObjectSerializer
         else if (isMapping(value))
         {
             writer.write("([");
+            int size = value.asMap().entrySet().size();
+            int idx = 0;
             for (Entry<LpcValue, LpcValue> entry : value.asMap().entrySet())
             {
                 writeValue(writer, entry.getKey());
                 writer.write(':');
                 writeValue(writer, entry.getValue());
-                writer.write(',');
+                if( idx < ( size - 1 ) ){
+                    writer.write(',');
+                }
+                idx++;
             }
             writer.write("])");
         }
         else if (isArray(value))
         {
             writer.write("({");
+            int size = value.asList().size();
+            int idx = 0;
             for (LpcValue element : value.asList())
             {
                 writeValue(writer, element);
-                writer.write(',');
+                if( idx < ( size - 1 ) ){
+                    writer.write(',');
+                }
             }
             writer.write("})");
         }

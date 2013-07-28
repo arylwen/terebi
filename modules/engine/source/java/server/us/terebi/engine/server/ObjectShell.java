@@ -193,6 +193,7 @@ public class ObjectShell implements Shell
 
     public void inputReceived(ByteBuffer input, InputInfo info, Connection connection)
     {
+    	LOG.info("inputReceived "+input);
         byte[] bytes = new byte[input.remaining()];
         for (int i = 0; i < bytes.length; i++)
         {
@@ -204,6 +205,7 @@ public class ObjectShell implements Shell
     public void inputReceived(String input, InputInfo info, Connection connection)
     {
         String[] lines = input.split("[\r\n]");
+    	LOG.info("after split "+lines);
         if (lines.length == 0)
         {
             lines = EMPTY_INPUT;
@@ -218,6 +220,7 @@ public class ObjectShell implements Shell
 
     private void handleInput(ObjectInstance user, Connection connection, String line)
     {
+    	LOG.info("Handling: "+line);
         if (line == null)
         {
             return;
@@ -229,8 +232,11 @@ public class ObjectShell implements Shell
 
         InputHandlerSet handlers = getInputHandlers(user);
         // clone the handlers to avoid concurrent modification exceptions..
-        for (InputHandler handler : new ArrayList<InputHandler>(handlers.handlers()))
+        ArrayList<InputHandler> hdlers = new ArrayList<InputHandler>(handlers.handlers());
+        LOG.info("handlers as array "+hdlers );
+        for (InputHandler handler : hdlers)
         {
+        	LOG.debug("Processing handler: "+handler);
             try
             {
                 String result = handler.inputReceived(user, connection, line);
@@ -282,6 +288,7 @@ public class ObjectShell implements Shell
         }
 
         InputHandlerSet handlers = (InputHandlerSet) attribute;
+        LOG.info("InputHandlerSet: "+handlers.handlers());
         return handlers;
     }
 

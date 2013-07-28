@@ -20,10 +20,13 @@ package us.terebi.lang.lpc.runtime.jvm.context;
 import java.util.Collections;
 import java.util.PriorityQueue;
 
+import org.apache.log4j.Logger;
+
 import us.terebi.lang.lpc.runtime.Callable;
 import us.terebi.lang.lpc.runtime.LpcValue;
 import us.terebi.lang.lpc.runtime.ObjectInstance;
 import us.terebi.lang.lpc.runtime.jvm.context.CallStack.Origin;
+import us.terebi.lang.lpc.runtime.jvm.efun.callout.CallOutEfun;
 import us.terebi.lang.lpc.runtime.util.InContext;
 import us.terebi.util.IdGenerator;
 
@@ -32,6 +35,8 @@ import us.terebi.util.IdGenerator;
  */
 public class CallOutManager
 {
+	private final Logger LOG = Logger.getLogger(CallOutManager.class);
+	
     public class Entry implements Comparable<Entry>
     {
         public final long time;
@@ -118,6 +123,7 @@ public class CallOutManager
         {
             public void run()
             {
+            	LOG.info("CallOutManager started");
                 poll();
             }
         }.start();
@@ -130,6 +136,7 @@ public class CallOutManager
         {
             Entry entry = new Entry(at, id, callable, owner);
             _queue.offer(entry);
+            LOG.info("Added to queue "+entry);
             _lock.notify();
         }
         return id;
@@ -169,29 +176,38 @@ public class CallOutManager
     {
         long now = System.currentTimeMillis();
         Entry entry = null;
+        LOG.info("processNextCallout");
         synchronized (_lock)
         {
-            if (_queue.isEmpty())
-            {
-                _lock.wait();
-                return;
-            }
+        	LOG.info("After lock");
+            //if (_queue.isEmpty())
+            //{
+            //    _lock.wait();
+            //    return;
+            //}
+            if( !_queue.isEmpty() ){
+                Entry peek = _queue.peek();
+                LOG.info("queue not empty "+peek.callable);
+                if (peek.time > now)
+                {
+                	LOG.info("too early "+peek.time);
+                    long sleep = peek.time - now;
+                    _lock.wait(sleep);
+                    //Thread.sleep(sleep);
+                   return;
+                }            
 
-            Entry peek = _queue.peek();
-            if (peek.time > now)
-            {
-                long sleep = peek.time - now;
-                _lock.wait(sleep);
-                return;
+                entry = _queue.poll();
+            	LOG.info("Got an entry "+entry.callable);
             }
-
-            entry = _queue.poll();
         }
-        execute(entry);
+        
+        if( entry != null )execute(entry);
     }
 
     private void execute(final Entry entry)
     {
+    	LOG.info("Firing "+entry.callable);
         RuntimeContext.activate(_context);
         InContext.execute(Origin.CALL_OUT, entry.owner, new InContext.Exec<LpcValue>()
         {
@@ -200,6 +216,7 @@ public class CallOutManager
                 return entry.callable.execute();
             }
         });
+        LOG.info("Fired "+entry.callable);
     }
 
     public Iterable<Entry> all()

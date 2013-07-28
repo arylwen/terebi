@@ -1,0 +1,27 @@
+title Optimus $N Maximus
+describe $N looks a bit rumpled and tired.
+home
+update
+remove all
+unwield all
+put all in bin
+open chest
+look in chest
+get all from chest
+dest staff
+dest robe
+dest hat
+clone /domains/default/armor/robe
+clone /secure/obj/glasses
+#clone /realms/$N/area/obj/key
+wear my robe
+wear my glasses
+cd /domains/town/obj
+clone 8ball
+clone d20
+clone d6
+cd /domains/campus/weap
+clone grenade
+clone waterpistol
+put all in my robe
+save

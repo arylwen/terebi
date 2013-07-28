@@ -17,11 +17,17 @@
 
 package us.terebi.lang.lpc.runtime.jvm.support;
 
+import org.apache.log4j.Logger;
+
+import us.terebi.lang.lpc.runtime.jvm.efun.callout.CallOutEfun;
+
 /**
  * 
  */
 public class ExecutionTimeCheck
 {
+	private static final Logger LOG = Logger.getLogger(CallOutEfun.class);
+
     public static final int DEFAULT_EVAL_TIME_MILLIS = 500;
 
     private static final ThreadLocal<ExecutionTimeCheck> CHECK = new ThreadLocal<ExecutionTimeCheck>();
@@ -38,9 +44,10 @@ public class ExecutionTimeCheck
         ExecutionTimeCheck evalCheck = CHECK.get();
         if (evalCheck == null)
         {
-            throw new IllegalStateException("No " + ExecutionTimeCheck.class.getSimpleName() + " associated with current thread");
-        }
-        if (System.currentTimeMillis() > evalCheck._endTime)
+            //throw new IllegalStateException("No " + ExecutionTimeCheck.class.getSimpleName() + " associated with current thread");
+            Throwable error = new IllegalStateException("No " + ExecutionTimeCheck.class.getSimpleName() + " associated with current thread");
+            LOG.error("TODO - check why the execution time check is missing", error);
+        } else if (System.currentTimeMillis() > evalCheck._endTime)
         {
             throw new ExecutionTimeTooHighException(evalCheck._startTime, evalCheck.getAllowedTime());
         }

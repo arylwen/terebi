@@ -55,6 +55,9 @@ import us.terebi.net.server.impl.ShellFeatureNotifier;
  */
 public class TelnetChannelConnection implements Connection
 {
+	
+	//private final static Logger LOG = Logger.getLogger(TelnetChannelConnection.class);
+	
     /**
      * @author <a href="http://blog.adjective.org/">Tim Vernum</a>
      */
@@ -234,6 +237,7 @@ public class TelnetChannelConnection implements Connection
 
     public synchronized void readInput() throws NetException
     {
+    	//LOG.info("reading input");
         if (!_channel.isConnected())
         {
             return;
@@ -246,13 +250,16 @@ public class TelnetChannelConnection implements Connection
             _channel.read(_telnetBuffer);
             _telnetBuffer.flip();
             ByteBuffer userBuffer = processTelnetBuffer();
+            //LOG.info("user buffer "+userBuffer);
 
             if (_shell == null)
             {
+            	LOG.info("shell is null");
                 return;
             }
 
             userBuffer.flip();
+            //LOG.info("user buffer "+userBuffer.toString());
             if (userBuffer.hasRemaining())
             {
                 _shell.inputReceived(userBuffer, info, this);

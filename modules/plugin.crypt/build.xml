@@ -52,7 +52,7 @@
     <jar destfile="${dir.output.plugin}/crypt.jar" >
         <metainf dir="${dir.source.resource.plugin}" includes="terebi.properties" />
         <fileset dir="${dir.output.classes}" />
-        <zipfileset src="lib/crypt.jar" includes="**/*.class" />
+        <!-- GC zipfileset src="lib/crypt.jar" includes="**/*.class" /-->
     </jar>
   </target>
 
