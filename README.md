@@ -9,6 +9,7 @@ The main public (unstable) repository is available at https://bitbucket.org/tver
 A git mirror is available at https://github.com/tvernum/terebi
 
 Chnages - arylwen - Aug 3rd 2013
+
 1. ConfigNames - Added auto.compiling.class.loader property; it would support configuring a different class loader for a different platform, e.g. Android.
 2. EngineInitializer Added windows path support for loading sefuns and master. Added the auto.compiling.class.loader property
 3. ds.terebi.config - added autocompiling classloader property
@@ -21,6 +22,7 @@ Chnages - arylwen - Aug 3rd 2013
 
 
 Changes - arylwen - July 2013
+
 1. Removed hg from the build files
 2. Upgraded Ivy to 2.3.0
 3. EngineInitialiser - activated the call-out manager
