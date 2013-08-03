@@ -33,6 +33,6 @@ public interface ICallStackTestObject1
 
     @LpcMember(modifiers = Modifier.PUBLIC, name = "topFunction")
     @LpcMemberType(kind = Kind.NIL, depth = 0)
-    public LpcValue topFunction(@LpcParameter(depth = 0, kind = Kind.OBJECT, semantics = ArgumentSemantics.BY_VALUE, name = "other") LpcValue other);
+    public LpcValue topFunction(@LpcParameter(depth = 0, kind = Kind.OBJECT, semantics = ArgumentSemantics.BY_VALUE, name = "other", varargs=false) LpcValue other);
 
 }

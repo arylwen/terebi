@@ -42,14 +42,14 @@ public class CallStackTestObject1 extends LpcObject implements ICallStackTestObj
 
     @LpcMember(modifiers = Modifier.PUBLIC, name = "topFunction")
     @LpcMemberType(kind = Kind.NIL, depth = 0)
-    public LpcValue topFunction(@LpcParameter(depth = 0, kind = Kind.OBJECT, semantics = ArgumentSemantics.BY_VALUE, name = "other") LpcValue other)
+    public LpcValue topFunction(@LpcParameter(depth = 0, kind = Kind.OBJECT, semantics = ArgumentSemantics.BY_VALUE, name = "other", varargs=false) LpcValue other)
     {
         return secondFunction(other);
     }
 
     @LpcMember(modifiers = Modifier.PRIVATE, name = "secondFunction")
     @LpcMemberType(kind = Kind.NIL, depth = 0)
-    public LpcValue secondFunction(@LpcParameter(depth = 0, kind = Kind.OBJECT, semantics = ArgumentSemantics.BY_VALUE, name = "other") LpcValue other)
+    public LpcValue secondFunction(@LpcParameter(depth = 0, kind = Kind.OBJECT, semantics = ArgumentSemantics.BY_VALUE, name = "other", varargs=false) LpcValue other)
     {
         return efun("call_other").execute(other, new StringValue("topFunction"), LpcConstants.ARRAY.EMPTY);
     }

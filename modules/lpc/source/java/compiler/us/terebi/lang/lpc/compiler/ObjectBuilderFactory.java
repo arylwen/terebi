@@ -44,6 +44,7 @@ public class ObjectBuilderFactory
     private File _workingDir;
     private DebugOptions _debug;
     private boolean _insertTimeCheck;
+    private String _classLoaderName;
 
     public ObjectBuilderFactory(Efuns efuns) throws IOException
     {
@@ -72,6 +73,10 @@ public class ObjectBuilderFactory
         _workingDir = workingDir;
     }
 
+    public void setClassLoaderName(String classLoaderName){
+    	_classLoaderName = classLoaderName;
+    }
+    
     public ObjectBuilder createBuilder(final File rootDirectory)
     {
         ResourceFinder finder = new FileFinder(rootDirectory);
@@ -86,7 +91,8 @@ public class ObjectBuilderFactory
         }
         Compiler javaCompiler = new ByteCodeCompiler(_manager, _efuns, _debug, _insertTimeCheck);
         ScopeLookup scope = new BasicScopeLookup(_manager);
-        ObjectBuilder builder = new ObjectBuilder(finder, _manager, scope, _parser, javaCompiler, _workingDir);
+        ObjectBuilder builder = new ObjectBuilder(finder, _manager, scope, _parser, javaCompiler, 
+        		_workingDir, _classLoaderName);
         for (Object object : asList(_manager, _parser, _efuns, finder))
         {
             setCompiler(object, builder);

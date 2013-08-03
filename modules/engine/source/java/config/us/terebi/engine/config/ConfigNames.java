@@ -42,4 +42,6 @@ public class ConfigNames
     public static final String SAVE_ADD_EXTENSION = "save.extension.add";
     public static final String SAVE_ENFORCE_EXTENSION = "save.extension.enforce";
     public static final String SAVE_DISALLOW_EXTENSIONS = "save.extension.disallow";
+    
+    public static final String AUTO_COMPILING_CLASS_LOADER = "auto.compiling.class.loader";
 }

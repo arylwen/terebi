@@ -1,4 +1,4 @@
-TEREBI LPMUD DRIVER
+﻿TEREBI LPMUD DRIVER
 ===================
 
 See: http://www.terebi.us/
@@ -8,13 +8,25 @@ Terebi is a reimplementation of LPMUD in Java
 The main public (unstable) repository is available at https://bitbucket.org/tvernum/terebi
 A git mirror is available at https://github.com/tvernum/terebi
 
-Changes - mudsings - July 2013
+Chnages - arylwen - Aug 3rd 2013
+1. ConfigNames - Added auto.compiling.class.loader property; it would support configuring a different class loader for a different platform, e.g. Android.
+2. EngineInitializer Added windows path support for loading sefuns and master. Added the auto.compiling.class.loader property
+3. ds.terebi.config - added autocompiling classloader property
+4. lpc.classpath - upgraded to asm 3.3.1
+5. ObjectBuilder - added the refelxive instantiation of the class loader
+6. ObjectBuilderFactory - added the classloadername property
+7. ExpressionCompiler - removed the synthetic property for the function generated for the catch statement; the android dexer does not index synthetic functions unless they are inner-outer acessors
+8. CallOutManager - removed chatty log statements
+9. Fixed associated test classes
+
+
+Changes - arylwen - July 2013
 1. Removed hg from the build files
 2. Upgraded Ivy to 2.3.0
 3. EngineInitialiser - activated the call-out manager
 4. ObjectShell - added debug info
 5. ProcessInputHandler - added debug info
-6. ds.terebi.config - added lib/invlude to the global include directories
+6. ds.terebi.config - added lib/include to the global include directories
 7. LpcCompilerObjectManager - do not compile a class if already added, however do not stop processing. This allowd to load master.c, that has circular dependencies
 8. StandardEFuns - added acos, pow and sqrt
 9. AbstractObjectDefinition - do not load master for master (prevent a cycle here)

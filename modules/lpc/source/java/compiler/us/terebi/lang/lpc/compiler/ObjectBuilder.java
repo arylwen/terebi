@@ -21,6 +21,8 @@ package us.terebi.lang.lpc.compiler;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Date;
@@ -62,29 +64,64 @@ public class ObjectBuilder implements ObjectCompiler
 
     private PrintStream _printStats;
 
-    public ObjectBuilder(ResourceFinder sourceFinder, CompilerObjectManager manager, ScopeLookup scope, LpcParser parser, Compiler compiler,
-            File workingDirectory)
+    public ObjectBuilder(ResourceFinder sourceFinder, CompilerObjectManager manager, 
+    		             ScopeLookup scope, LpcParser parser, Compiler compiler,
+                         File workingDirectory, String classLoaderName)
     {
         _sourceFinder = sourceFinder;
         _manager = manager;
         _scope = scope;
         _parser = parser;
         _compiler = compiler;
-        _classLoader = getClassLoader(workingDirectory);
+        _classLoader = getClassLoader(workingDirectory, classLoaderName);
         _store = new FileStore(workingDirectory);
         _printStats = null;
     }
 
-    private ClassLoader getClassLoader(File workingDirectory)
+	private ClassLoader getClassLoader(File workingDirectory, String classLoaderName)
     {
         try
         {
-            return new AutoCompilingClassLoader(new URL[] { workingDirectory.toURL() }, getClass().getClassLoader(), this);
+        	Class<?> clazz = Class.forName(classLoaderName);
+        	Constructor<?> ctr = clazz.getConstructor(new Class[]{URL[].class, 
+        			ClassLoader.class, ObjectCompiler.class});
+        	ClassLoader ret = (ClassLoader)ctr.newInstance(new Object[]
+        			{new URL[] { workingDirectory.toURL() }, getClass().getClassLoader(), this});
+            return ret;
+        	//return new AutoCompilingClassLoader(new URL[] { workingDirectory.toURL() }, getClass().getClassLoader(), this);
         }
         catch (MalformedURLException e)
         {
             throw new RuntimeException("!! Cannot convert File " + workingDirectory + " into URL !!", e);
-        }
+        } catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+            throw new RuntimeException("!! Cannot find class " + classLoaderName + " ", e);
+		} catch (SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+            throw new RuntimeException("!! Cannot instantiate class " + classLoaderName + " Not enough rights !!", e);
+		} catch (NoSuchMethodException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+            throw new RuntimeException("!! Cannot find constructor for " + classLoaderName + "  !!", e);
+		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+            throw new RuntimeException("!! Cannot invoke constructor for " + classLoaderName + " ", e);
+		} catch (InstantiationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+            throw new RuntimeException("!! Cannot instantiate" + classLoaderName + " into URL !!", e);
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+            throw new RuntimeException("!! Cannot instantiate class " + classLoaderName + " Not enough rights !!", e);
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+            throw new RuntimeException("!! Cannot instantiate" + classLoaderName + " into URL !!", e);
+		}
     }
 
     public void setPrintStats(PrintStream printStats)

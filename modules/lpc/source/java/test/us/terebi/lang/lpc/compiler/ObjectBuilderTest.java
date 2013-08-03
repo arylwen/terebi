@@ -72,7 +72,8 @@ public class ObjectBuilderTest
 
         ByteCodeCompiler compiler = new ByteCodeCompiler(manager, efuns, new DebugOptions(null), true);
         ScopeLookup scope = new BasicScopeLookup(manager);
-        ObjectBuilder builder = new ObjectBuilder(finder, manager, scope, new LpcParser(), compiler, workingDir);
+        ObjectBuilder builder = new ObjectBuilder(finder, manager, scope, new LpcParser(), compiler, 
+        		     workingDir, "us.terebi.lang.lpc.compiler.classloader.AutoCompilingClassLoader");
         CompiledObjectDefinition object = builder.compile("/area/foo/bar.c");
         assertNotNull(object);
         assertNotNull(object.getImplementationClass());

@@ -1010,6 +1010,7 @@ public class ExpressionCompiler extends BaseASTVisitor
     public LpcExpression visit(ASTCatch node, Object data)
     {
         Token token = node.jjtGetFirstToken();
+        //String methodName = "lpc$catch_" + token.beginLine + "_" + token.beginColumn;
         String methodName = "lpc$catch_" + token.beginLine + "_" + token.beginColumn;
 
         Collection<ASTVariableReference> referenced = findReferencedVariables(node);
@@ -1043,7 +1044,9 @@ public class ExpressionCompiler extends BaseASTVisitor
 
         MethodSpec method = new MethodSpec(methodName);
         method.withParameters(parameters);
-        method.withModifiers(ElementModifier.PRIVATE, ElementModifier.SYNTHETIC);
+        //method.withModifiers(ElementModifier.PRIVATE, ElementModifier.SYNTHETIC);
+        //the dexer doesn't like synthetic methods
+        method.withModifiers(ElementModifier.PRIVATE);
         method.withReturnType(LPC_VALUE);
 
         Node bodyNode = node.jjtGetChild(0);

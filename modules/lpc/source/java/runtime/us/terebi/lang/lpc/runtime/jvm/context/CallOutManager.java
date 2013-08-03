@@ -176,10 +176,10 @@ public class CallOutManager
     {
         long now = System.currentTimeMillis();
         Entry entry = null;
-        LOG.info("processNextCallout");
+        //LOG.info("processNextCallout");
         synchronized (_lock)
         {
-        	LOG.info("After lock");
+        	//LOG.info("After lock");
             //if (_queue.isEmpty())
             //{
             //    _lock.wait();

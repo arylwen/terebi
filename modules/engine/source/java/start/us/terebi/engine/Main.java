@@ -40,6 +40,7 @@ public class Main
         }
         File configFile = new File(args[0]);
         PropertiesConfig config = new PropertiesConfig(configFile);
+        
         try
         {
             new Engine(config).run();
