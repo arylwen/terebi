@@ -150,7 +150,7 @@ public class FileResource implements Resource
                 + ","
                 + (_path == null ? "" : " path=" + _path)
                 + " type="
-                + (_file.isFile() ? 'f' : _file.isDirectory() ? 'd' : _file.exists() ? "s" : '-')
+                + (_file.isFile() ? "f" : _file.isDirectory() ? "d" : _file.exists() ? "s" : "-")
                 + ")";
     }
 

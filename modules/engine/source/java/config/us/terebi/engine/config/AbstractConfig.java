@@ -140,15 +140,15 @@ public abstract class AbstractConfig implements Config
 
     public boolean getBoolean(String key)
     {
-        return getBoolean(key, null);
+        return getBooleanPriv(key, null);
     }
 
     public boolean getBoolean(String key, boolean defaultValue)
     {
-        return getBoolean(key, Boolean.valueOf(defaultValue));
+        return getBooleanPriv(key, Boolean.valueOf(defaultValue));
     }
 
-    private boolean getBoolean(String key, Boolean defaultValue)
+    private boolean getBooleanPriv(String key, Boolean defaultValue)
     {
         String value = getConfigValue(key);
         if (value == null)
@@ -195,15 +195,15 @@ public abstract class AbstractConfig implements Config
 
     public long getLong(String key)
     {
-        return getLong(key, null);
+        return getLongPriv(key, null);
     }
 
     public long getLong(String key, long defaultValue)
     {
-        return getLong(key, Long.valueOf(defaultValue));
+        return getLongPriv(key, Long.valueOf(defaultValue));
     }
 
-    private long getLong(String key, Long defaultValue)
+    private long getLongPriv(String key, Long defaultValue)
     {
         String value = getConfigValue(key);
         if (value == null)

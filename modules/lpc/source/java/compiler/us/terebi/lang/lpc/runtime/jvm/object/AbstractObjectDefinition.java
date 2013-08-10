@@ -73,8 +73,7 @@ public abstract class AbstractObjectDefinition implements CompiledObjectDefiniti
             LOG.warn("The master object for " + this + " is currently being loaded - it cannot be accessed");
             return null;
         }
-        //aelyah master doesn't need a master...
-        if ((_master == null) && !this._name.contains("master.c"))
+        if (_master == null)
         {
             try
             {

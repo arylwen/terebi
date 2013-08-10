@@ -1010,7 +1010,6 @@ public class ExpressionCompiler extends BaseASTVisitor
     public LpcExpression visit(ASTCatch node, Object data)
     {
         Token token = node.jjtGetFirstToken();
-        //String methodName = "lpc$catch_" + token.beginLine + "_" + token.beginColumn;
         String methodName = "lpc$catch_" + token.beginLine + "_" + token.beginColumn;
 
         Collection<ASTVariableReference> referenced = findReferencedVariables(node);

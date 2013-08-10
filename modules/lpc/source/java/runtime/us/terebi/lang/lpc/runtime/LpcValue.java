@@ -42,4 +42,9 @@ public interface LpcValue
     public <T extends ExtensionValue> T asExtension(Class<? extends T> type);
 
     public CharSequence debugInfo(); 
+    
+    //the dexer complains if this method is not defined on the interface    
+    public boolean equals(Object other);
+    
+    
 }

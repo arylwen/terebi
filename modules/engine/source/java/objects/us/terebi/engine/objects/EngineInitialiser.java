@@ -233,13 +233,4 @@ public class EngineInitialiser
             loadObjectManager();
         }
     }
-    
-    /***
-     * 
-     * @return
-     */
-    //private ClassLoader getClassLoader()
-    //{
-    	
-    //}
 }

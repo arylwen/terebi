@@ -1,14 +1,8 @@
 ﻿TEREBI LPMUD DRIVER
 ===================
 
-See: http://www.terebi.us/
+Changes - arylwen - Aug 3rd 2013
 
-Terebi is a reimplementation of LPMUD in Java
-
-The main public (unstable) repository is available at https://bitbucket.org/tvernum/terebi
-A git mirror is available at https://github.com/tvernum/terebi
-
-Chnages - arylwen - Aug 3rd 2013
 1. ConfigNames - Added auto.compiling.class.loader property; it would support configuring a different class loader for a different platform, e.g. Android.
 2. EngineInitializer Added windows path support for loading sefuns and master. Added the auto.compiling.class.loader property
 3. ds.terebi.config - added autocompiling classloader property
@@ -18,9 +12,16 @@ Chnages - arylwen - Aug 3rd 2013
 7. ExpressionCompiler - removed the synthetic property for the function generated for the catch statement; the android dexer does not index synthetic functions unless they are inner-outer acessors
 8. CallOutManager - removed chatty log statements
 9. Fixed associated test classes
+10. AbstractConfig - the android compiler doesn't accept two methods with the same signature and different visibility while desktop java doesn't complain
+11. LpcCompilerObjectManager - reverted back to throwing an error when compiler cicles are detected
+12. AbstractObjectDefinition - reverted back to throwing an error when compiler cicles are detected
+13. FileResource - android compiler doesn't box very well - double quotes needed
+14. LpcValue - the dexer complains if equals is not defined on the interface also when we have a cast to an interface
+15. renamed the stout project
 
 
 Changes - arylwen - July 2013
+
 1. Removed hg from the build files
 2. Upgraded Ivy to 2.3.0
 3. EngineInitialiser - activated the call-out manager
@@ -51,6 +52,13 @@ Changes - arylwen - July 2013
 28. WriteEfun - debug info
 29. ObjectSerializer - fixed the array and map serialization; TODO fix the function serialization
 
+-------------------------------------------------------
 
+Based on http://www.terebi.us/
+
+Terebi is a reimplementation of LPMUD in Java
+
+The main public (unstable) repository is available at https://bitbucket.org/tvernum/terebi
+A git mirror is available at https://github.com/tvernum/terebi
 
 

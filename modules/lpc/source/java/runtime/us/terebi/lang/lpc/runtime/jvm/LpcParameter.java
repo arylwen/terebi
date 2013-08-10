@@ -39,6 +39,6 @@ public @interface LpcParameter
     String className() default "";
     ArgumentSemantics semantics();
     //boolean varargs() default false;
-    //the default creates two
-    boolean varargs();
+	//this generates the varags twice and confuses the dexer
+	boolean varargs();
 }

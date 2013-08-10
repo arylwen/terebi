@@ -92,14 +92,12 @@ public class LpcCompilerObjectManager implements CompilerObjectManager, Compiler
 
     private CompiledObjectDefinition compile(String name)
     {
-    	LOG.info("Compiling: "+name);
-        /*if (!name.contains("master.c") &&_compiling.contains(name))
+        if (_compiling.contains(name))
         {
-            throw new InternalError("Compile cycle detected for "+name);
-        }*/
+            throw new InternalError("Compile cycle detected");
+        }
 
-    	if(!_compiling.contains(name))
-            _compiling.add(name);
+        _compiling.add(name);
         try
         {
             CompiledObjectDefinition definition = _compiler.compile(filename(name));
@@ -121,7 +119,6 @@ public class LpcCompilerObjectManager implements CompilerObjectManager, Compiler
         {
             _compiling.remove(name);
         }
-    	
     }
 
     private CompiledObjectDefinition register(CompiledObjectDefinition definition, ObjectInstance prototype)
