@@ -305,8 +305,10 @@ public class ClassBuilder extends BaseASTVisitor
             }
             MethodSpec method = new MethodSpec(key.byteCodeName);
 
-            method.withModifiers(ElementModifier.PUBLIC, ElementModifier.FINAL, ElementModifier.SYNTHETIC);
-            method.withAnnotation(new AnnotationSpec(Dispatch.class));
+            //method.withModifiers(ElementModifier.PUBLIC, ElementModifier.FINAL, ElementModifier.SYNTHETIC);
+			//android dexer cannot index synthetic methods
+			method.withModifiers(ElementModifier.PUBLIC, ElementModifier.FINAL);
+		    method.withAnnotation(new AnnotationSpec(Dispatch.class));
             method.withReturnType(ByteCodeConstants.LPC_VALUE);
 
             Parameter[] parameters = new Parameter[arguments.size()];

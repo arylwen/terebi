@@ -127,7 +127,7 @@ import static us.terebi.lang.lpc.compiler.bytecode.ByteCodeConstants.LPC_RUNTIME
 import static us.terebi.lang.lpc.compiler.bytecode.ByteCodeConstants.LPC_VALUE;
 import static us.terebi.lang.lpc.compiler.bytecode.ByteCodeConstants.STRING_VALUE_CONSTRUCTOR;
 import static us.terebi.lang.lpc.compiler.bytecode.FunctionLiteralCompiler.findReferencedVariables;
-import static us.terebi.lang.lpc.compiler.bytecode.FunctionLiteralCompiler.getReferencedVariables;
+import static us.terebi.lang.lpc.compiler.bytecode.FunctionLiteralCompiler.*;
 import static us.terebi.lang.lpc.runtime.jvm.support.MiscSupport.commonType;
 
 /**
@@ -1039,13 +1039,15 @@ public class ExpressionCompiler extends BaseASTVisitor
             parameterTypes[i] = ByteCodeConstants.LPC_VALUE_ARRAY;
             arguments[i] = VM.Expression.variable(FunctionLiteralCompiler.POSITIONAL_ARGUMENT_COLLECTION);
         }
-        MethodSignature signature = new MethodSignatureImpl(singleton(ElementModifier.PRIVATE), LPC_VALUE, methodName, parameterTypes);
+        //MethodSignature signature = new MethodSignatureImpl(singleton(ElementModifier.PRIVATE), LPC_VALUE, methodName, parameterTypes);
+        MethodSignature signature = new MethodSignatureImpl(singleton(ElementModifier.PUBLIC), LPC_VALUE, methodName, parameterTypes);
 
         MethodSpec method = new MethodSpec(methodName);
         method.withParameters(parameters);
         //method.withModifiers(ElementModifier.PRIVATE, ElementModifier.SYNTHETIC);
         //the dexer doesn't like synthetic methods
-        method.withModifiers(ElementModifier.PRIVATE);
+        //method.withModifiers(ElementModifier.PRIVATE);
+        method.withModifiers(ElementModifier.PUBLIC);
         method.withReturnType(LPC_VALUE);
 
         Node bodyNode = node.jjtGetChild(0);

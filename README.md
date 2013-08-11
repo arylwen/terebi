@@ -1,6 +1,12 @@
 ﻿TEREBI LPMUD DRIVER
 ===================
 
+Changes - arylwen - Aug 11 2013
+
+1. ExpressionCompiler - removed more sythetic modifier, made generated synthetic fucntion public, to conform with the interfcae
+2. TelnetChannelConnecitonHandler - fixed the event processing thread to accept a larger stack size; on android the default stack size is too small to compile certain classes
+3. 
+
 Changes - arylwen - Aug 3rd 2013
 
 1. ConfigNames - Added auto.compiling.class.loader property; it would support configuring a different class loader for a different platform, e.g. Android.

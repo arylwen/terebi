@@ -89,6 +89,16 @@ public class TelnetChannelConnectionHandler extends AbstractComponent<NoChildren
     @Override
     protected void preBegin()
     {
+        //we want to force the thread factory on the executor, so we can specify
+        //bigger stack sizes; on android the stack size is really small and the
+        //compilation fails
+        if (_threadFactory == null)
+        {
+            SimpleThreadFactory simpleThreadFactory = new SimpleThreadFactory();
+            simpleThreadFactory.setDaemon(true);
+            simpleThreadFactory.setPrefix(getClass().getSimpleName() + "[" + System.identityHashCode(this) + "]");
+            setThreadFactory(simpleThreadFactory);
+        }
         if (_executor == null)
         {
             if (_threadFactory == null)

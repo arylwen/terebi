@@ -32,6 +32,7 @@ public class SimpleThreadFactory implements ThreadFactory
     private int _id;
     private int _priority;
     private boolean _daemon;
+    private ThreadGroup _threadGroup;
 
     public SimpleThreadFactory()
     {
@@ -39,6 +40,7 @@ public class SimpleThreadFactory implements ThreadFactory
         _id = 0;
         _priority = Thread.NORM_PRIORITY;
         _daemon = false;
+        _threadGroup = new ThreadGroup (_prefix);
     }
 
     public void setPrefix(String prefix)
@@ -54,7 +56,7 @@ public class SimpleThreadFactory implements ThreadFactory
     public Thread newThread(Runnable r)
     {
         String name = _prefix + '-' + nextId();
-        Thread thread = new Thread(r, name);
+        Thread thread = new Thread(_threadGroup, r, name, 2000000);
         thread.setPriority(_priority);
         thread.setDaemon(_daemon);
         if (LOG.isDebugEnabled())

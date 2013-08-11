@@ -25,6 +25,6 @@ import us.terebi.lang.lpc.compiler.java.context.CompiledObjectDefinition;
  */
 public interface ObjectCompiler
 {
-    public void precompile(String objectSource) throws CompileException;
+    public boolean precompile(String objectSource) throws CompileException;
     public CompiledObjectDefinition compile(String objectSource) throws CompileException;
 }

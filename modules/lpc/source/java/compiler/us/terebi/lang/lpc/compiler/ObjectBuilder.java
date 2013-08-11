@@ -198,10 +198,18 @@ public class ObjectBuilder implements ObjectCompiler
         }
     }
 
-    public void precompile(String objectSource) throws CompileException
+	//TODO refactor to avoid evaluating the compile condition twice.
+    public boolean precompile(String objectSource) throws CompileException
     {
+		boolean ret = false;
         Resource resource = getResource(objectSource);
-        doCompilation(resource, false);
+		//ClassName name = ClassNameMapper.getImplementingClass(resource);
+        //long mod = _store.getLastModified(name);
+		//if (resource.newerThan(mod)) ret = true;
+		
+        doCompilation(resource, false) ;
+		
+		return ret;
     }
 
     private ASTObjectDefinition compile(Resource resource, ClassName name)
